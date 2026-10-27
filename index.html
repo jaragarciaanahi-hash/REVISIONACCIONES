@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reclamo de Acciones Comerciales</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@700;800&family=Source+Sans+3:wght@400;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: una columna — encabezado, botón para favoritos, cómo usarlo, códigos vigentes, preguntas */
+:root{
+  --bg:#f3f4f1; --surface:#ffffff; --ink:#1b2430; --muted:#5d6672; --line:#d9ddd6;
+  --accent:#b8741a; --accent-ink:#ffffff; --navy:#1f3a5f; --navy-ink:#ffffff;
+  --ok:#2f7d4f; --warn-bg:#fdf1d8; --chip:#eef0ec;
+  --display:"Archivo","Arial Narrow",Arial,sans-serif;
+  --body:"Source Sans 3","Segoe UI",Arial,sans-serif;
+  --mono:"JetBrains Mono",Consolas,"Courier New",monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root{
+  --bg:#14181e; --surface:#1c222a; --ink:#e7eaee; --muted:#a2abb6; --line:#323a45;
+  --accent:#e0a04a; --accent-ink:#1b1206; --navy:#22344d; --navy-ink:#f1f4f8;
+  --ok:#6cc08f; --warn-bg:#3a2f17; --chip:#262d36; color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 var(--body)}
+.wrap{max-width:900px;margin:0 auto;padding:32px 16px 64px;display:flex;flex-direction:column;gap:28px}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0;line-height:1.15}
+h1{font-size:clamp(28px,5vw,40px);font-weight:800}
+h2{font-size:21px}
+h3{font-size:16px}
+p{margin:0;max-width:68ch}
+.lead{font-size:18px;color:var(--muted)}
+.eyebrow{font:600 12px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+header{display:flex;flex-direction:column;gap:12px}
+.privacy{display:flex;gap:10px;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:12px 14px;font-size:15px}
+.privacy b{color:var(--ok)}
+.install{background:var(--navy);color:var(--navy-ink);border-radius:10px;padding:22px;display:flex;flex-direction:column;gap:16px}
+.row{display:flex;flex-wrap:wrap;gap:14px;align-items:center}
+.bm{display:inline-flex;align-items:center;gap:8px;background:var(--accent);color:var(--accent-ink);font:800 17px/1 var(--display);padding:15px 20px;border-radius:999px;text-decoration:none;cursor:grab}
+.bm:focus-visible,button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.hint{font-size:15px;opacity:.92}
+.ghost{background:transparent;color:inherit;border:1px solid currentColor;border-radius:6px;padding:8px 13px;font:600 14px var(--body);cursor:pointer}
+.msg{font-size:14px;min-height:1.2em}
+details{font-size:14px}
+summary{cursor:pointer;font-weight:600}
+details ol{margin:8px 0 0;padding-left:20px;display:flex;flex-direction:column;gap:4px}
+textarea{width:100%;font:12px/1.4 var(--mono);border-radius:6px;padding:8px;min-height:70px}
+.steps{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;counter-reset:s}
+.steps li{counter-increment:s;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:14px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.steps li::before{content:counter(s);font:700 13px/1 var(--mono);color:var(--accent)}
+.steps li p{font-size:14px;color:var(--muted)}
+.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:8px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;min-width:720px;font-size:14px}
+th,td{text-align:left;vertical-align:top;padding:9px 12px;border-bottom:1px solid var(--line)}
+th{font:600 12px/1.2 var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);background:var(--chip)}
+tr:last-child td{border-bottom:0}
+.code{font-family:var(--mono);font-size:13px}
+.pill{display:inline-block;font:600 11px/1 var(--mono);padding:3px 7px;border-radius:999px;background:var(--chip);color:var(--muted)}
+.pill.on{background:var(--accent);color:var(--accent-ink)}
+.note{font-size:13px;color:var(--muted)}
+.faq{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px}
+.faq div{display:flex;flex-direction:column;gap:6px;min-width:0}
+.faq p{font-size:15px;color:var(--muted)}
+.warn{background:var(--warn-bg);border-radius:8px;padding:12px 14px;font-size:14px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <span class="eyebrow">Herramienta para distribuidores · Chess ERP</span>
+  <h1>Reclamo de Acciones Comerciales</h1>
+  <p class="lead">Detecta los clientes de K+T, Autoservicio, Mayoristas y REF que no están en los listados de las acciones del book y arma el Excel para reclamar.</p>
+  <div class="privacy"><span aria-hidden="true">🔒</span><p><b>Tus datos no salen de tu computadora.</b> El botón corre dentro de tu propio Chess, con tu usuario. Lee acciones, grupos y clientes, no modifica nada y no envía información a ningún lado.</p></div>
+</header>
+
+<section class="install" aria-labelledby="t-inst">
+  <h2 id="t-inst">Guardá el botón una sola vez</h2>
+  <div class="row">
+    <a id="bm" class="bm" href="#">⇢ Reclamo acciones</a>
+    <span class="hint">Arrastralo con el mouse a la barra de favoritos.<br>¿No ves la barra? Ctrl + Shift + B (Windows) o Cmd + Shift + B (Mac).</span>
+  </div>
+  <p class="hint">Desde ahí, cada vez que quieras el reclamo: entrá a Chess y tocá el favorito. Los códigos del mes se actualizan solos.</p>
+  <details>
+    <summary>Si no se deja arrastrar: crearlo a mano</summary>
+    <ol>
+      <li>Tocá <b>Copiar favorito</b>.</li>
+      <li>Clic derecho en la barra de favoritos → <b>Agregar página</b> (en Edge: "Agregar favorito").</li>
+      <li>Nombre: <b>Reclamo acciones</b>. En <b>URL</b> pegá lo copiado y guardá.</li>
+      <li>No lo pegues en la barra de direcciones: ahí el navegador lo busca en Google.</li>
+    </ol>
+  </details>
+  <div class="row">
+    <button id="copy" class="ghost" type="button">Copiar favorito</button>
+    <span id="msg" class="msg" role="status"></span>
+  </div>
+  <textarea id="fb" aria-label="Código del favorito" hidden readonly></textarea>
+</section>
+
+<ol class="steps" aria-label="Cómo se usa">
+  <li><h3>Entrá a Chess</h3><p>Iniciá sesión como siempre, en cualquier pantalla.</p></li>
+  <li><h3>Tocá el favorito</h3><p>Se abre un panel encima de Chess. Tarda unos segundos mientras lee clientes y grupos.</p></li>
+  <li><h3>Revisá y descargá</h3><p>Filtrá por prioridad o canal y tocá "Descargar Excel del reclamo".</p></li>
+</ol>
+
+<section style="display:flex;flex-direction:column;gap:12px" aria-labelledby="t-cod">
+  <h2 id="t-cod">Códigos que revisa este mes</h2>
+  <p id="meta" class="note"></p>
+  <div class="tbl"><table>
+    <thead id="codh"></thead>
+    <tbody id="cod"></tbody>
+  </table></div>
+  <p class="note">Las familias <span class="pill on">obligatoria</span> definen el estado (solo las que tienen códigos en su canal): si le faltan todas, el cliente queda como <b>Sin ninguna</b>; si le falta alguna, <b>Le falta alguna</b>. Las demás se muestran como dato. Si algún código no está cargado en tu Chess, el panel te avisa.</p>
+</section>
+
+<section class="faq" aria-label="Preguntas frecuentes">
+  <div><h3>¿Qué necesito?</h3><p>Chess ERP web, un usuario con acceso a Acciones Comerciales, Grupos de Clientes y Clientes, y Chrome o Edge en una computadora.</p></div>
+  <div><h3>¿Qué clientes revisa?</h3><p>Los activos de K+T, Autoservicio, Mayoristas y REF (incluye refrigerados), según la jerarquía de marketing de Chess. Si un canal no tiene códigos para una familia, no se le exige.</p></div>
+  <div><h3>¿Qué es un cliente "nuevo"?</h3><p>El que tiene fecha de alta desde la fecha indicada arriba. Un nuevo sin ninguna obligatoria sale con prioridad ALTA.</p></div>
+</section>
+
+<p class="warn"><b>Combos:</b> se cargan en otro módulo de Chess y no se revisan acá. La herramienta tampoco mira volumen: un cliente sin LATONES puede estar bien si no le corresponde por compra.</p>
+</div>
+
+<script src="config.js"></script>
+<script>
+(function(){
+  var base=location.href.replace(/[#?].*$/,'').replace(/[^\/]*$/,'');
+  var loader="(function(){var b='"+base+"',t=Date.now(),d=document,s=d.createElement('script');s.charset='UTF-8';s.src=b+'config.js?'+t;s.onerror=function(){alert('No se pudo cargar Reclamo de acciones. Revisá tu conexión.')};s.onload=function(){var r=d.createElement('script');r.charset='UTF-8';r.src=b+'rca.js?'+t;d.body.appendChild(r)};d.body.appendChild(s)})()";
+  var href='javascript:'+loader;
+  var bm=document.getElementById('bm'), msg=document.getElementById('msg'), fb=document.getElementById('fb');
+  bm.setAttribute('href',href);
+  bm.addEventListener('click',function(e){e.preventDefault();msg.textContent='Arrastralo a la barra de favoritos y usalo estando en Chess.';});
+  function ok(){msg.textContent='Copiado. Pegalo en el campo URL de un favorito nuevo.';fb.hidden=true;}
+  function fail(){fb.value=href;fb.hidden=false;fb.focus();fb.select();msg.textContent='Quedó seleccionado abajo: copialo con Ctrl + C.';}
+  function legacy(){try{fb.value=href;fb.hidden=false;fb.select();if(document.execCommand('copy')){ok();return;}}catch(e){}fail();}
+  document.getElementById('copy').addEventListener('click',function(){try{navigator.clipboard.writeText(href).then(ok,legacy)}catch(e){legacy()}});
+  var C=window.__RCA_CFG, tb=document.getElementById('cod'), meta=document.getElementById('meta');
+  if(!C){meta.textContent='No se encontró config.js.';return;}
+  var esc=function(s){return String(s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})};
+  var list=function(o){o=o||{};var k=Object.keys(o);return k.length?k.map(function(c){return '<span class="code">'+esc(c)+'</span> '+esc(o[c])}).join('<br>'):'<span class="note">—</span>'};
+  meta.innerHTML='Book: <b>'+esc(C.book||'')+'</b> · actualizado '+esc((C.actualizado||'').split('-').reverse().join('/'))+' · cliente nuevo = alta desde <b>'+esc(C.nuevoDesde.split('-').reverse().join('/'))+'</b>';
+  var CH=Object.keys(C.fam), NM={'K+T':'K+T (trad. y kioscos)','AS':'AS (autoservicio)','MAY':'Mayoristas','REF':'REF (on premise)'};
+  document.getElementById('codh').innerHTML='<tr><th>Familia</th>'+CH.map(function(c){return '<th>'+esc(NM[c]||c)+'</th>'}).join('')+'</tr>';
+  tb.innerHTML=C.familias.map(function(f){var ob=C.obligatorias.indexOf(f)>=0;return '<tr><td><b>'+esc(f)+'</b><br><span class="pill'+(ob?' on':'')+'">'+(ob?'obligatoria':'informativa')+'</span></td>'+CH.map(function(c){return '<td>'+list(C.fam[c][f])+'</td>'}).join('')+'</tr>'}).join('');
+})();
+</script>
+</body>
+</html>
