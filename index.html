@@ -103,18 +103,20 @@ tr:last-child td{border-bottom:0}
 </ol>
 
 <section style="display:flex;flex-direction:column;gap:12px" aria-labelledby="t-cod">
-  <h2 id="t-cod">Códigos que revisa este mes</h2>
+  <h2 id="t-cod">Códigos generales del mes</h2>
   <p id="meta" class="note"></p>
   <div class="tbl"><table>
     <thead id="codh"></thead>
     <tbody id="cod"></tbody>
   </table></div>
   <p class="note">Las familias <span class="pill on">obligatoria</span> definen el estado (solo las que tienen códigos en su canal): si le faltan todas, el cliente queda como <b>Sin ninguna</b>; si le falta alguna, <b>Le falta alguna</b>. Las demás se muestran como dato. Si algún código no está cargado en tu Chess, el panel te avisa.</p>
+  <div class="warn" style="background:var(--surface);border:1px solid var(--line)"><b>¿Tu distribuidora usa otro book?</b> Dentro del panel en Chess tocá <b>Subir mi book</b> y elegí el Excel del book (la hoja "Book Completo"). La herramienta arma las familias sola, las revisás, marcás las obligatorias y guardás. Esos códigos quedan guardados en tu computadora y reemplazan a los generales; con <b>Usar códigos generales</b> volvés a estos. También podés cargarlos a mano con <b>Editar códigos</b>.</div>
 </section>
 
 <section class="faq" aria-label="Preguntas frecuentes">
   <div><h3>¿Qué necesito?</h3><p>Chess ERP web, un usuario con acceso a Acciones Comerciales, Grupos de Clientes y Clientes, y Chrome o Edge en una computadora.</p></div>
   <div><h3>¿Qué clientes revisa?</h3><p>Los activos de K+T, Autoservicio, Mayoristas y REF (incluye refrigerados), según la jerarquía de marketing de Chess. Si un canal no tiene códigos para una familia, no se le exige.</p></div>
+  <div><h3>¿Qué acciones no se cuentan?</h3><p>Las generales: van por subcanal o zona y las tiene casi todo el canal (por ejemplo, la escalonada de BR y QC 269). No sirven para detectar faltantes, así que el panel las lista aparte.</p></div>
   <div><h3>¿Qué es un cliente "nuevo"?</h3><p>El que tiene fecha de alta desde la fecha indicada arriba. Un nuevo sin ninguna obligatoria sale con prioridad ALTA.</p></div>
 </section>
 

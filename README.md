@@ -21,6 +21,10 @@ Corre dentro del Chess de cada usuario, con su sesión. Solo lee datos y no los 
 
 Ese es el link para compartir.
 
+## Otras distribuidoras con su propio book
+
+No necesitan GitHub: en el panel dentro de Chess tocan **Subir mi book**, eligen el Excel (hoja "Book Completo"), revisan las familias y guardan. Queda guardado en su computadora y reemplaza a los códigos generales. **Usar códigos generales** vuelve a `config.js`.
+
 ## Actualizar cuando llega el book nuevo
 
 1. Abrí `config.js` en GitHub → lápiz (Edit).
