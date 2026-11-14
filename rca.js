@@ -30,7 +30,7 @@ function header(){const a=active(); $('#rca-src').textContent=a.label; $('#rca-g
 let D=null;
 const mm=location.pathname.match(/^\/[^\/]+\//);
 const B=mm?mm[0]+'web/api/':'';
-const get=async u=>{const r=await fetch(B+u,{credentials:'include'}); if(!r.ok) throw new Error('Chess respondió '+r.status+' en '+u.split('?')[0]+'. ¿La sesión sigue abierta?'); return r.json();};
+const get=async u=>{const r=await fetch(B+u,{credentials:'include'}); if(!r.ok) throw new Error('Chess respondió '+r.status+' en '+u.split('?')[0]+'. ¿La sesión sigue abierta?'); const j=await r.json(); const er=(j&&Array.isArray(j.error))?j.error.filter(e=>e&&e.tipo==='E'):[]; if(er.length) throw new Error('Chess devolvió un error en '+u.split('?')[0]+': '+er.map(e=>e.mensaje).join(' · ')); return j;};
 async function loadData(){
   if(D) return D;
   if(!mm||!/chesserp/i.test(location.host)) throw new Error('Abrí este botón estando dentro de Chess ERP, con tu sesión iniciada.');
@@ -42,11 +42,19 @@ async function loadData(){
   const gl=((await get('gruposClientes/listadoGruposclientes')).eGruposClientes||[]);
   const listado={}; gl.forEach(g=>{listado[g.idgrupoclientes]=/^\s*CLIENTE\s/i.test(g.detallegrupo||'');});
   st('Leyendo clientes…');
-  let cli=[];
-  for(let s=0;s<100000;s+=500){
-    const r=await get(`clientes/buscarCliente?pcFil=&piSuc=${suc}&piSkip=${s}&piTop=500&pcOrd=&plAnu=false&pcUsu=${encodeURIComponent(usu)}&plRet=true`);
-    const a=(r.dsClientes&&r.dsClientes.eClientes)||[]; cli=cli.concat(a); st('Leyendo clientes… '+cli.length); if(a.length<500) break;
+  const PG=100; // Chess acepta como máximo 100 clientes por pedido
+  const page=async s=>{const r=await get(`clientes/buscarCliente?pcFil=&piSuc=${suc}&piSkip=${s}&piTop=${PG}&pcOrd=&plAnu=false&pcUsu=${encodeURIComponent(usu)}&plRet=true`); return r;};
+  const first=await page(0); let cli=(first.dsClientes&&first.dsClientes.eClientes)||[];
+  const total=Number(first.piRec)||0;
+  const skips=[]; for(let s=PG;s<total;s+=PG) skips.push(s);
+  for(let i=0;i<skips.length;i+=6){
+    const res=await Promise.all(skips.slice(i,i+6).map(page));
+    res.forEach(r=>{cli=cli.concat((r.dsClientes&&r.dsClientes.eClientes)||[]);});
+    st('Leyendo clientes… '+cli.length+' de '+total);
   }
+  if(!total&&cli.length===PG){ for(let s=PG;s<100000;s+=PG){const r=await page(s); const a=(r.dsClientes&&r.dsClientes.eClientes)||[]; cli=cli.concat(a); st('Leyendo clientes… '+cli.length); if(a.length<PG) break;} }
+  if(!cli.length) throw new Error('Chess no devolvió clientes. Revisá que tu usuario pueda ver el Maestro de Clientes.');
+  const seen=new Set(); cli=cli.filter(c=>!seen.has(c.idcliente)&&seen.add(c.idcliente));
   D={emp:ses.empresaNombre||'',promos,listado,cli,mem:{}};
   return D;
 }
