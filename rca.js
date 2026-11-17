@@ -73,25 +73,27 @@ async function analyze(){
   await loadData();
   const {promos,listado,cli,mem}=D;
   const CHS=CH_ALL.filter(ch=>CFG.fam[ch]);
-  const codes=new Set(); CHS.forEach(ch=>Object.values(CFG.fam[ch]).forEach(o=>Object.keys(o).forEach(c=>codes.add(+c))));
-  const info={}; codes.forEach(c=>{const ps=promos.filter(p=>p.idpromocompania==c); info[c]={promos:ps,groups:[...new Set(ps.map(p=>p.idgrupoclientescia).filter(Boolean))],todos:ps.some(p=>!p.idgrupoclientescia)};});
+  // cada clave puede traer códigos alternativos separados por "/" (compañía / BEES / no BEES): vale el que exista en Chess
+  const codes=new Set(); CHS.forEach(ch=>Object.values(CFG.fam[ch]).forEach(o=>Object.keys(o).forEach(c=>codes.add(String(c)))));
+  const alts=k=>String(k).split('/').map(x=>Number(x.trim())).filter(Boolean);
+  const info={}; codes.forEach(k=>{const a=alts(k); const ps=promos.filter(p=>a.includes(Number(p.idpromocompania))); info[k]={promos:ps,groups:[...new Set(ps.map(p=>p.idgrupoclientescia).filter(Boolean))],todos:ps.some(p=>!p.idgrupoclientescia)};});
   await members([...new Set(Object.values(info).flatMap(x=>x.groups))]);
   st('Calculando…');
-  const has=(c,id)=>{const x=info[c]; if(!x||!x.promos.length) return false; if(x.todos) return true; return x.groups.some(g=>mem[g]&&mem[g].has(id));};
+  const has=(c,id)=>{const x=info[String(c)]; if(!x||!x.promos.length) return false; if(x.todos) return true; return x.groups.some(g=>mem[g]&&mem[g].has(id));};
   const byCh={}; cli.forEach(c=>{const ch=canal(c); if(ch&&CFG.fam[ch]) (byCh[ch]=byCh[ch]||[]).push(c);});
   // códigos generales: grupo por subcanal/zona (no listado) que tiene ≥90% del canal → no discriminan
   const general={}; const efectivo={};
   CHS.forEach(ch=>{const cl=byCh[ch]||[]; efectivo[ch]={};
     Object.entries(CFG.fam[ch]).forEach(([f,o])=>{ const ok={};
-      Object.entries(o).forEach(([cd,l])=>{const x=info[+cd]; if(!x||!x.promos.length){ok[cd]=l;return;}
-        const esListado=x.groups.some(g=>listado[g]); const cov=cl.length?cl.filter(c=>has(+cd,c.idcliente)).length/cl.length:0;
+      Object.entries(o).forEach(([cd,l])=>{const x=info[cd]; if(!x||!x.promos.length){ok[cd]=l;return;}
+        const esListado=x.groups.some(g=>listado[g]); const cov=cl.length?cl.filter(c=>has(cd,c.idcliente)).length/cl.length:0;
         if(!esListado&&cov>=0.9){(general[ch]=general[ch]||[]).push(cd+' '+l+' ('+f+')');} else ok[cd]=l;});
       efectivo[ch][f]=ok; });});
   const FAMS=CFG.familias, OBL=CFG.obligatorias||[];
   const applies=(ch,f)=>efectivo[ch]&&efectivo[ch][f]&&Object.keys(efectivo[ch][f]).length>0;
   const rows=[];
   CHS.forEach(ch=>(byCh[ch]||[]).forEach(c=>{
-    const v={}; FAMS.forEach(f=>{ if(!applies(ch,f)){v[f]='—';return;} const hit=Object.entries(efectivo[ch][f]).filter(([cd])=>has(+cd,c.idcliente)).map(([,l])=>l); v[f]=hit.length?hit.join(', '):'FALTA';});
+    const v={}; FAMS.forEach(f=>{ if(!applies(ch,f)){v[f]='—';return;} const hit=Object.entries(efectivo[ch][f]).filter(([cd])=>has(cd,c.idcliente)).map(([,l])=>l); v[f]=hit.length?hit.join(', '):'FALTA';});
     const oblCh=OBL.filter(f=>applies(ch,f)); if(!oblCh.length) return;
     const falt=oblCh.filter(f=>v[f]==='FALTA').length; if(!falt) return;
     const nuevo=(c.fecalta||'')>=CFG.nuevoDesde; const todas=falt===oblCh.length;
@@ -131,7 +133,7 @@ async function analyze(){
     const H=['Código','Razón social','Fantasía','Canal','Subcanal','Localidad','Departamento','Fecha alta','Nuevo',...famShown,'Faltan (obligatorias)','Estado','Prioridad'];
     const Dt=rows.map(r=>[r.id,r.nom,r.fan,r.ch,r.sub,r.loc,r.dep,fdate(r.alta),r.nuevo?'SI':'NO',...famShown.map(f=>r.v[f]),r.falt,r.estado,r.prio]);
     const R2=[['Cód. promo compañía','Canal','Familia','Etiqueta','Cargado en Chess','Se cuenta','Acciones Chess']];
-    CHS.forEach(ch=>Object.entries(CFG.fam[ch]).forEach(([f,o])=>Object.entries(o).forEach(([c,l])=>{const x=info[+c]; R2.push([+c,ch,f,l,x.promos.length?'SI':'NO',efectivo[ch][f]&&efectivo[ch][f][c]!=null?'SI':'NO (general)',x.promos.map(p=>p.codpromo+' '+p.descpromo).join(' | ')]);})));
+    CHS.forEach(ch=>Object.entries(CFG.fam[ch]).forEach(([f,o])=>Object.entries(o).forEach(([c,l])=>{const x=info[c]; R2.push([/^\d+$/.test(c)?+c:c,ch,f,l,x.promos.length?'SI':'NO',efectivo[ch][f]&&efectivo[ch][f][c]!=null?'SI':'NO (general)',x.promos.map(p=>p.codpromo+' '+p.descpromo).join(' | ')]);})));
     const blob=xlsx([{name:'Reclamo',rows:[H,...Dt],widths:[9,32,22,7,20,20,16,11,7,...famShown.map(()=>12),10,15,10]},{name:'Codigos usados',rows:R2,widths:[16,8,16,26,14,14,60]}]);
     const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='Reclamo_acciones_'+(D.emp||'distribuidora').replace(/[^\w]+/g,'_')+'_'+new Date().toISOString().slice(0,10)+'.xlsx'; document.body.appendChild(a); a.click(); a.remove();
   };
@@ -152,30 +154,45 @@ function chansOf(canalTxt,desc){
   return [...out];
 }
 function parseBook(wb){
-  const fam={}; const add=(ch,f,code,label)=>{f=norm(f)||'OTRAS'; ((fam[ch]=fam[ch]||{})[f]=fam[ch][f]||{})[code]=String(label||code).slice(0,40);};
-  let n=0;
+  // Lee dos formatos: Cuyo ("Book Completo": TIPO ACCIÓN · Código · Descripción · Canal) y por área
+  // ("ACCIONES <MES>": AREA · TIPO DE PLAN · CANAL · SEGMENTO · … · código compañía · código NO BEES · código BEES · NOMBRE · FECHAS).
+  // Las columnas de código se detectan por contenido (números de 5 a 6 cifras); si una fila trae varios, se guardan como alternativos.
+  const fam={}; const add=(ch,f,key,label)=>{f=norm(f)||'OTRAS'; ((fam[ch]=fam[ch]||{})[f]=fam[ch][f]||{})[key]=String(label||key).replace(/\s+/g,' ').trim().slice(0,45);};
+  const hoy=new Date(); hoy.setHours(0,0,0,0);
+  let n=0, venc=0, combos=0; const hojas=[];
   wb.SheetNames.forEach(sn=>{
     const ws=wb.Sheets[sn]; if(!ws) return;
-    const rows=XLSX.utils.sheet_to_json(ws,{header:1,blankrows:false,defval:null});
+    const rows=XLSX.utils.sheet_to_json(ws,{header:1,blankrows:false,defval:null,raw:true});
     for(let h=0;h<Math.min(rows.length,15);h++){
-      const H=(rows[h]||[]).map(norm);
-      const ci=H.findIndex(x=>/^COD(IGO)?\.? ?ACCION|^CODIGO$/.test(x));
-      const ti=H.findIndex(x=>/^TIPO ?ACCION|^SEGMENTO$|^FAMILIA$/.test(x));
-      if(ci<0||ti<0) continue;
-      const ka=H.findIndex(x=>x==='CANAL'); const di=H.findIndex(x=>/^DESCRIP/.test(x)); const si=H.findIndex(x=>x==='SKU');
+      const H=(rows[h]||[]).map(x=>norm(x).replace(/\s+/g,' '));
+      const ti=[/^TIPO ?(DE )?ACCION/,/^SEGMENTO$/,/^FAMILIA$/].map(rx=>H.findIndex(x=>rx.test(x))).find(x=>x>=0);
+      const ka=H.findIndex(x=>x==='CANAL'||x==='CANAL APLICA');
+      const hasCod=H.some(x=>/^COD/.test(x));
+      if(ti==null||ti<0||(ka<0&&!hasCod)) continue;
+      const di=['NOMBRE','DESCRIPCION','DESCRIPCION ACCION','SKU'].map(k=>H.findIndex(x=>x===k||x.startsWith(k))).find(x=>x>=0);
+      const pi=H.findIndex(x=>x==='TIPO DE PLAN');
+      const data=rows.slice(h+1).filter(r=>r&&r.some(v=>v!=null&&v!==''));
+      const isCode=v=>{const x=typeof v==='string'?Number(v.replace(/ /g,'').trim()):v; return typeof x==='number'&&x===Math.floor(x)&&x>=20000&&x<1000000;};
+      const width=Math.max(0,...data.map(r=>r.length));
+      const codeCols=[]; for(let c=0;c<width;c++){ const k=data.filter(r=>isCode(r[c])).length; if(k>=Math.max(2,data.length*0.2)) codeCols.push(c); }
+      if(!codeCols.length) continue;
+      const n0=n;
       const esRef=/REF/.test(norm(sn))&&ka<0;
-      for(let r=h+1;r<rows.length;r++){ const R=rows[r]||[]; const code=Number(R[ci]); if(!code||code!==Math.floor(code)) continue;
-        const tipo=R[ti]; if(/COMBO/.test(norm(tipo))) continue;
-        const label=(di>=0?R[di]:null)||(si>=0?R[si]:null)||code;
-        const chs=esRef?['REF']:chansOf(ka>=0?R[ka]:'',label);
-        chs.forEach(ch=>add(ch,tipo,code,label)); n++; }
-      break;
+      data.forEach(R=>{
+        const cs=[...new Set(codeCols.map(c=>R[c]).filter(isCode).map(v=>Number(String(v).replace(/ /g,'').trim())))]; if(!cs.length) return;
+        const tipo=R[ti]; if(/COMBO/.test(norm(tipo))){combos++;return;}
+        const fechas=R.filter(v=>v instanceof Date); if(fechas.length&&Math.max(...fechas.map(d=>d.getTime()))<hoy.getTime()){venc++;return;}
+        const nombre=(di!=null&&di>=0?R[di]:null)||cs[0];
+        const label=(pi>=0&&R[pi]?String(R[pi]).trim()+' · ':'')+nombre;
+        const chs=esRef?['REF']:chansOf(ka>=0?R[ka]:'',nombre);
+        chs.forEach(ch=>add(ch,tipo,cs.join('/'),label)); n++; });
+      if(n>n0) hojas.push(sn); break;
     }
   });
-  if(!n) throw new Error('No encontré una hoja con columnas de código de acción y tipo de acción (por ejemplo "Book Completo"). Revisá el archivo o cargá los códigos con "Editar códigos".');
+  if(!n) throw new Error('No encontré una hoja con columnas de canal, tipo de acción o segmento, y códigos de acción. Revisá el archivo o cargá los códigos con "Editar códigos".');
   const familias=[...new Set(Object.values(fam).flatMap(o=>Object.keys(o)))].sort();
   const obl=familias.filter(f=>/^(CORE|LATONES)$/.test(f));
-  return {nuevoDesde:(GEN&&GEN.nuevoDesde)||new Date(Date.now()-180*864e5).toISOString().slice(0,10),familias,obligatorias:obl.length?obl:familias.slice(0,1),fam,n};
+  return {nuevoDesde:(GEN&&GEN.nuevoDesde)||new Date(Date.now()-180*864e5).toISOString().slice(0,10),familias,obligatorias:obl.length?obl:familias.slice(0,1),fam,n,venc,combos,hojas};
 }
 function loadXLSX(){ return new Promise((res,rej)=>{ if(window.XLSX) return res(); const s=document.createElement('script'); s.src=XLSX_URL; s.onload=()=>res(); s.onerror=()=>rej(new Error('No se pudo cargar el lector de Excel. Revisá la conexión a internet.')); document.head.appendChild(s); }); }
 $('#rca-up').onclick=()=>$('#rca-file').click();
@@ -185,11 +202,11 @@ $('#rca-file').onchange=async e=>{
   try{ await loadXLSX(); const buf=await f.arrayBuffer();
     const names=XLSX.read(buf,{type:'array',bookSheets:true}).SheetNames;
     const want=names.filter(n=>/BOOK|REF|ACCION/i.test(n));
-    const wb=XLSX.read(buf,{type:'array',sheets:want.length?want:names.filter(n=>!/^TS /i.test(n))});
-    const cfg=parseBook(wb); editor(cfg,f.name,'Se leyeron '+cfg.n+' acciones del book (sin combos). Revisá las familias, marcá las obligatorias y guardá.');
+    const wb=XLSX.read(buf,{type:'array',cellDates:true,sheets:want.length?want:names.filter(n=>!/^TS /i.test(n))});
+    const cfg=parseBook(wb); editor(cfg,f.name,'Se leyeron '+cfg.n+' acciones vigentes de '+cfg.hojas.join(', ')+(cfg.venc?' (se descartaron '+cfg.venc+' vencidas)':'')+(cfg.combos?' y se dejaron afuera '+cfg.combos+' combos':'')+'. Cuando una acción trae varios códigos (compañía / BEES / no BEES) se usa el que exista en tu Chess. Revisá las familias, marcá las obligatorias y guardá.');
   }catch(err){ showErr(err); }
 };
-$('#rca-ed').onclick=()=>{const A=active(); const o=loadOwn(); editor(A.cfg||{nuevoDesde:new Date().toISOString().slice(0,10),familias:['CORE','LATONES'],obligatorias:['CORE','LATONES'],fam:{}},o?o.origen:'códigos editados a mano','Un código por línea: código y etiqueta (ej. 308142 Tier 1).');};
+$('#rca-ed').onclick=()=>{const A=active(); const o=loadOwn(); editor(A.cfg||{nuevoDesde:new Date().toISOString().slice(0,10),familias:['CORE','LATONES'],obligatorias:['CORE','LATONES'],fam:{}},o?o.origen:'códigos editados a mano','Un código por línea: código y etiqueta (ej. 308142 Tier 1). Si una acción tiene varios códigos, separalos con / (ej. 302260/22952/22848 CORE Drop 1).');};
 $('#rca-gen').onclick=()=>{clearOwn(); analyze().catch(showErr);};
 
 // ---------- editor de códigos ----------
@@ -210,7 +227,7 @@ function editor(cfg,origen,msg){
   $('#rca-save').onclick=()=>{
     const out={nuevoDesde:$('#rca-nd').value||cfg.nuevoDesde,familias:[],obligatorias:[],fam:{}};
     tb.querySelectorAll('tr').forEach(tr=>{const f=norm(tr.querySelector('.rca-fn').value); if(!f) return; let any=false;
-      tr.querySelectorAll('textarea').forEach(ta=>{const o={}; ta.value.split(/\n+/).forEach(l=>{const m=l.trim().match(/^(\d{3,9})\s*[-–:]?\s*(.*)$/); if(m) o[m[1]]=m[2].trim()||m[1];}); if(Object.keys(o).length){(out.fam[ta.dataset.ch]=out.fam[ta.dataset.ch]||{})[f]=o; any=true;}});
+      tr.querySelectorAll('textarea').forEach(ta=>{const o={}; ta.value.split(/\n+/).forEach(l=>{const m=l.trim().match(/^(\d{3,9}(?:\s*\/\s*\d{3,9})*)\s*[-–:]?\s*(.*)$/); if(m){const k=m[1].replace(/\s+/g,''); o[k]=m[2].trim()||k;}}); if(Object.keys(o).length){(out.fam[ta.dataset.ch]=out.fam[ta.dataset.ch]||{})[f]=o; any=true;}});
       if(any){out.familias.push(f); if(tr.querySelector('.rca-ob').checked) out.obligatorias.push(f);} });
     if(!out.familias.length){alert('Cargá al menos un código.');return;}
     if(!out.obligatorias.length) out.obligatorias=[out.familias[0]];

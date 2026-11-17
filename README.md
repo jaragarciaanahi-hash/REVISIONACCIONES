@@ -23,7 +23,7 @@ Ese es el link para compartir.
 
 ## Otras distribuidoras con su propio book
 
-No necesitan GitHub: en el panel dentro de Chess tocan **Subir mi book**, eligen el Excel (hoja "Book Completo"), revisan las familias y guardan. Queda guardado en su computadora y reemplaza a los códigos generales. **Usar códigos generales** vuelve a `config.js`.
+No necesitan GitHub: en el panel dentro de Chess tocan **Subir mi book**, eligen el Excel del book, revisan las familias y guardan. Formatos que lee: Cuyo (hoja "Book Completo": tipo de acción, código, descripción, canal) y por área (hoja "ACCIONES …": área, tipo de plan, canal, segmento, código compañía, código NO BEES, código BEES, nombre, fechas). Las acciones vencidas se descartan y, si una fila trae varios códigos, se usa el que exista en Chess. Queda guardado en su computadora y reemplaza a los códigos generales. **Usar códigos generales** vuelve a `config.js`.
 
 ## Actualizar cuando llega el book nuevo
 
