@@ -114,7 +114,7 @@ async function analyze(){
    ${famShown.map(f=>kpi(cnt(r=>r.v[f]==='FALTA'),'Sin '+f,'#fff')).join('')}
   </div>
   <div style="font-size:12px;color:#555;margin:-4px 0 12px">${CHS.map(ch=>`<b>${ch}</b>: ${rows.filter(r=>r.ch===ch).length} con faltantes de ${(byCh[ch]||[]).length}`).join(' · ')}</div>
-  ${noCarg.length?`<div style="background:#fff3cd;border:1px solid #e6d28a;border-radius:8px;padding:10px 14px;margin-bottom:10px"><b>Códigos del book que no están cargados en Chess:</b> ${esc(noCarg.join(' · '))}</div>`:''}
+  ${noCarg.length?(noCarg.length<=12?`<div style="background:#fff3cd;border:1px solid #e6d28a;border-radius:8px;padding:10px 14px;margin-bottom:10px"><b>Códigos del book que no están cargados en Chess:</b> ${esc(noCarg.join(' · '))}</div>`:`<details style="background:#fff3cd;border:1px solid #e6d28a;border-radius:8px;padding:10px 14px;margin-bottom:10px"><summary style="cursor:pointer"><b>${noCarg.length} códigos del book no están cargados en tu Chess</b> (si el book trae acciones de otras áreas o distribuidoras, es normal). Ver lista</summary><div style="margin-top:6px;font-size:12px">${esc(noCarg.join(' · '))}</div></details>`):''}
   ${genTxt?`<details style="font-size:12px;color:#555;margin-bottom:12px"><summary style="cursor:pointer">Acciones generales que no se cuentan (van por subcanal y las tiene casi todo el canal)</summary><div style="margin-top:6px">${genTxt}</div></details>`:''}
   <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:10px">
    <select id="rca-fp" style="padding:6px"><option value="">Todas las prioridades</option><option>ALTA</option><option>MEDIA</option><option>BAJA</option></select>
@@ -178,6 +178,11 @@ function parseBook(wb){
       if(!codeCols.length) continue;
       const n0=n;
       const esRef=/REF/.test(norm(sn))&&ka<0;
+      // tipos "genéricos" (ALGOPROMO, vacío): la familia se deduce de la descripción usando las familias reales del book
+      const GENERICO=/^(ALGOPROMO|OTRA|OTROS|OTRAS|)$/;
+      const reales=[...new Set(data.map(R=>norm(R[ti])).filter(x=>x&&!GENERICO.test(x)&&!/COMBO/.test(x)))];
+      const stem=f=>f.replace(/(ES|S)$/,'');
+      const famDe=(tipo,nombre)=>{const tn=norm(tipo); if(!GENERICO.test(tn)) return tn; const d=' '+norm(nombre)+' '; const f=reales.find(r=>d.includes(' '+stem(r))); return f||tn||'OTRAS';};
       data.forEach(R=>{
         const cs=[...new Set(codeCols.map(c=>R[c]).filter(isCode).map(v=>Number(String(v).replace(/ /g,'').trim())))]; if(!cs.length) return;
         const tipo=R[ti]; if(/COMBO/.test(norm(tipo))){combos++;return;}
@@ -185,7 +190,8 @@ function parseBook(wb){
         const nombre=(di!=null&&di>=0?R[di]:null)||cs[0];
         const label=(pi>=0&&R[pi]?String(R[pi]).trim()+' · ':'')+nombre;
         const chs=esRef?['REF']:chansOf(ka>=0?R[ka]:'',nombre);
-        chs.forEach(ch=>add(ch,tipo,cs.join('/'),label)); n++; });
+        const familia=famDe(tipo,nombre);
+        chs.forEach(ch=>add(ch,familia,cs.join('/'),label)); n++; });
       if(n>n0) hojas.push(sn); break;
     }
   });
